@@ -2209,7 +2209,11 @@ def wine_launcher(out: str, work: str, image: str) -> str:
 """
     return f"""#!/bin/sh
 # Starts the Windows build of the loader with Wine. WINE picks another one, e.g. a Proton build's bin/wine.
-here=$(dirname "$(readlink -f "$0")")
+launcher=$(readlink -f "$0") || {{
+    printf 'Could not resolve runtime launcher %s\\n' "$0" >&2
+    exit 1
+}}
+here=$(dirname "$launcher") || exit 1
 use_package=
 if [ "${{1-}}" = --packaged ]; then
     shift

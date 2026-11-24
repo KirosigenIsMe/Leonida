@@ -264,6 +264,10 @@ class RuntimePackagingTest(unittest.TestCase):
         self.assertIn("Missing package path", empty_path.stderr)
         with open(path_file, "wb") as f:
             f.write(path_bytes)
+        unresolved = subprocess.run([launcher, "--run", "other.exe"], cwd=self.root,
+                                    env=dict(env, PATH=self.root), capture_output=True, text=True)
+        self.assertEqual(unresolved.returncode, 1)
+        self.assertIn("Could not resolve runtime launcher", unresolved.stderr)
         missing = subprocess.run([launcher, "--run"], cwd=self.root, env=env, capture_output=True, text=True)
         self.assertNotEqual(missing.returncode, 0)
         self.assertIn(image, missing.stderr)
