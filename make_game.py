@@ -2210,7 +2210,18 @@ def wine_launcher(out: str, work: str, image: str) -> str:
     return f"""#!/bin/sh
 # Starts the Windows build of the loader with Wine. WINE picks another one, e.g. a Proton build's bin/wine.
 here=$(dirname "$(readlink -f "$0")")
-if [ "$#" -eq 1 ] && {{ [ "$1" = --dry-run ] || [ "$1" = --init ] || [ "$1" = --run ]; }}; then
+use_package=
+if [ "${{1-}}" = --packaged ]; then
+    shift
+    use_package=1
+elif [ "$#" -eq 1 ]; then
+    case "$1" in --dry-run|--init|--run) use_package=1 ;; esac
+fi
+if [ "$use_package" ]; then
+    case "${{1-}}" in
+        --dry-run|--init|--run) mode=$1; shift ;;
+        *) printf 'Use --packaged with --dry-run, --init or --run.\\n' >&2; exit 2 ;;
+    esac
     game=$(cat "$here/game_path.txt" && printf .) || exit 1
     cd "${{game%.}}" || exit 1
     image={shlex.quote(image)}
@@ -2220,7 +2231,7 @@ if [ "$#" -eq 1 ] && {{ [ "$1" = --dry-run ] || [ "$1" = --init ] || [ "$1" = --
     fi
     # Wine maps the Unix filesystem root to Z:. The game reads from its package and writes to the port's overlay.
 {moved_catalog}    export LEONIDA_D3D12="${{LEONIDA_D3D12:-vulkan}}"
-    set -- "$1" "./$image" --overlay "Z:$here/overlay"
+    set -- "$mode" "./$image" --overlay "Z:$here/overlay" "$@"
 fi
 exec "${{WINE:-wine}}" "$here/gta6rt.exe" "$@"
 """
