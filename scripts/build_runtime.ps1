@@ -25,9 +25,10 @@ function Invoke-ToolProbe([string]$Exe, [string[]]$ProbeArgs) {
 }
 
 function Find-BuildTool([string]$Preferred, [string]$CommandName, [scriptblock]$Validate) {
-    if ($Preferred -and (Test-Path $Preferred)) { return $Preferred }
+    if ($Preferred -and (Test-Path -LiteralPath $Preferred -PathType Leaf)) { return $Preferred }
     foreach ($cmd in @(Get-Command $CommandName -CommandType Application -All -ErrorAction SilentlyContinue)) {
-        if ($cmd.Source -and ($cmd.Source -match "\.(exe|cmd|bat)$") -and (Test-Path $cmd.Source) -and (& $Validate $cmd.Source)) {
+        if ($cmd.Source -and ($cmd.Source -match "\.(exe|cmd|bat)$") -and
+            (Test-Path -LiteralPath $cmd.Source -PathType Leaf) -and (& $Validate $cmd.Source)) {
             return $cmd.Source
         }
     }
