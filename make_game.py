@@ -2222,7 +2222,10 @@ if [ "$use_package" ]; then
         --dry-run|--init|--run) mode=$1; shift ;;
         *) printf 'Use --packaged with --dry-run, --init or --run.\\n' >&2; exit 2 ;;
     esac
-    game=$(cat "$here/game_path.txt" && printf .) || exit 1
+    if ! game=$(cat "$here/game_path.txt" 2>/dev/null && printf .) || [ "$game" = . ]; then
+        printf 'Missing package path in %s/game_path.txt\\n' "$here" >&2
+        exit 1
+    fi
     cd "${{game%.}}" || exit 1
     image={shlex.quote(image)}
     if [ ! -f "./$image" ]; then

@@ -254,6 +254,16 @@ class RuntimePackagingTest(unittest.TestCase):
         env = dict(os.environ, WINE=sys.executable)
         env.pop("LEONIDA_D3D12", None)
         env.pop("LEONIDA_SHADERS", None)
+        path_file = os.path.join(self.out, "game_path.txt")
+        with open(path_file, "rb") as f:
+            path_bytes = f.read()
+        with open(os.path.join(self.root, image), "wb"), open(path_file, "wb"):
+            pass
+        empty_path = subprocess.run([launcher, "--run"], cwd=self.root, env=env, capture_output=True, text=True)
+        self.assertEqual(empty_path.returncode, 1)
+        self.assertIn("Missing package path", empty_path.stderr)
+        with open(path_file, "wb") as f:
+            f.write(path_bytes)
         missing = subprocess.run([launcher, "--run"], cwd=self.root, env=env, capture_output=True, text=True)
         self.assertNotEqual(missing.returncode, 0)
         self.assertIn(image, missing.stderr)
