@@ -170,4 +170,10 @@ while (-not $p.HasExited) {
 Emit-NewLogLines -Offset ([ref]$outOff) -Path $stdoutLog
 Emit-NewLogLines -Offset ([ref]$errOff) -Path $stderrLog
 if ($p.ExitCode -ne 0) { throw "build failed ($($p.ExitCode))" }
+foreach ($artifact in @("gta6rt.exe", "gta6rt_tls_host.dll")) {
+    $built = Join-Path $out $artifact
+    if (-not (Test-Path -LiteralPath $built -PathType Leaf)) {
+        throw "The runtime build did not produce $built."
+    }
+}
 Write-Output "built $out\gta6rt.exe"
